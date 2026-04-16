@@ -37,9 +37,9 @@ class Game {
 
     loadAssets() {
         const images = {
-            player: 'enemy/player-avatar.png',
-            enemy: 'enemy/tricaluctus(underwater-monster).png',
-            background: 'enemy/game-background.png'
+            player: 'assets/player-avatar.png',
+            enemy: 'assets/tricaluctus(underwater-monster).png',
+            background: 'assets/game-background.png'
         };
 
         let loadedImages = 0;

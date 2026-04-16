@@ -1,0 +1,30 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.vscode/
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime / temp
+.tmp/
+tmp/
+.cache/
+
+# Node (if used later)
+node_modules/
+
+# Python local server/cache
+__pycache__/
+.pytest_cache/
+
+# Build outputs
+dist/
+build/
+coverage/
