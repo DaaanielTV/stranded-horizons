@@ -6,134 +6,158 @@
     <title>Stranded Horizons - Play</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Poppins', sans-serif; background: #090b16; color: #f8f9fa; overflow: hidden; }
+        .game-container { position: relative; width: 100vw; height: 100vh; }
+        #gameCanvas { width: 100%; height: 100%; display: block; }
+
+        .hud {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            background: rgba(8, 10, 20, 0.66);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            padding: 12px;
+            font-size: 14px;
+            min-width: 250px;
+            backdrop-filter: blur(4px);
         }
 
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-color: #1a1a2e;
-            color: #ffffff;
-            line-height: 1.6;
-            overflow: hidden;
+        .hud .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 16px; }
+        .hud .status { margin-top: 8px; color: #74c0fc; font-weight: 500; }
+
+        .panel {
+            position: absolute;
+            background: rgba(8, 10, 20, 0.82);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 12px;
+            padding: 14px;
+            backdrop-filter: blur(6px);
         }
 
-        .game-container {
-            position: relative;
-            width: 100vw;
-            height: 100vh;
-            background-color: #000;
-        }
+        #shop { top: 16px; right: 16px; width: 320px; max-height: calc(100vh - 32px); overflow-y: auto; }
+        #shop h2 { font-size: 18px; margin-bottom: 6px; }
+        #shop p { font-size: 12px; opacity: .8; margin-bottom: 10px; }
 
-        #gameCanvas {
+        .shop-btn, .meta-btn, .menu-btn {
             width: 100%;
-            height: 100%;
-            display: block;
+            margin-bottom: 6px;
+            text-align: left;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #f8f9fa;
+            background: rgba(108, 92, 231, 0.25);
+            border-radius: 8px;
+            padding: 8px 10px;
+            cursor: pointer;
+            transition: 0.2s ease;
         }
 
-        #ui {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            font-size: 18px;
-            color: #fff;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-        }
+        .shop-btn:hover, .meta-btn:hover, .menu-btn:hover { background: rgba(162, 155, 254, 0.36); }
+        .shop-btn:disabled, .meta-btn:disabled { opacity: .55; cursor: not-allowed; }
 
-        #deathScreen {
+        #metaProgress { left: 16px; bottom: 16px; width: 360px; }
+        #metaProgress h3 { margin-bottom: 8px; }
+        #metaProgress p { margin-bottom: 8px; font-size: 13px; }
+
+        .overlay {
             display: none;
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background-color: rgba(0, 0, 0, 0.8);
-            padding: 40px;
-            border-radius: 10px;
+            min-width: 360px;
+            max-width: 600px;
             text-align: center;
+            z-index: 20;
         }
 
-        #deathScreen button {
-            margin: 10px;
-            padding: 10px 20px;
-            font-size: 16px;
-            background-color: #6c5ce7;
-            color: #fff;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s;
+        .overlay h1 { margin-bottom: 10px; }
+        .overlay p { margin-bottom: 6px; }
+
+        #startScreen { display: flex; flex-direction: column; }
+
+        .controls-help {
+            margin: 14px 0;
+            font-size: 14px;
+            opacity: .85;
+            text-align: left;
+            background: rgba(255,255,255,.05);
+            border-radius: 8px;
+            padding: 10px;
         }
 
-        #deathScreen button:hover {
-            background-color: #a29bfe;
-        }
+        .controls-help li { margin-left: 18px; }
 
-        #shop {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background-color: rgba(0, 0, 0, 0.7);
-            padding: 20px;
-            border-radius: 10px;
-        }
-
-        #shop button {
-            display: block;
-            margin: 10px 0;
-            padding: 8px 16px;
-            background-color: #6c5ce7;
-            color: #fff;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        #shop button:hover {
-            background-color: #a29bfe;
-        }
-
-        #waveComplete {
-            display: none;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: rgba(0, 0, 0, 0.8);
-            padding: 20px;
-            border-radius: 10px;
-            text-align: center;
-            font-size: 24px;
-            color: #fff;
-        }
+        #waveComplete { color: #63e6be; font-size: 26px; }
     </style>
 </head>
 <body>
     <div class="game-container">
         <canvas id="gameCanvas"></canvas>
-        <div id="ui">
-            <div id="health">Health: 100</div>
-            <div id="stamina">Stamina: 100</div>
-            <div id="score">Score: 0</div>
+
+        <div class="hud">
+            <div class="grid">
+                <div id="health">HP: 0</div>
+                <div id="stamina">Stamina: 0</div>
+                <div id="coins">Coins: 0</div>
+                <div id="score">Score: 0</div>
+                <div id="wave">Wave: 1</div>
+                <div id="waveRemaining">Remaining: 0</div>
+                <div id="weapon">Weapon: Pistol</div>
+                <div id="ammo">Ammo: 0</div>
+            </div>
+            <div class="status" id="waveStatus">Press Start Run.</div>
+            <div class="status">Buffs: <span id="activeBuffs">none</span></div>
+            <div class="status" id="bestRun">Best Run: none</div>
         </div>
-        <div id="shop">
-            <h2>Shop</h2>
-            <button id="upgradeSpeed">Upgrade Speed (<span id="speedPrice">100</span> coins)</button>
-            <button id="upgradeDamage">Upgrade Damage (<span id="damagePrice">150</span> coins)</button>
-            <div>Current Speed: <span id="currentSpeed">1</span></div>
-            <div>Current Damage: <span id="currentDamage">1</span></div>
-            <div>Coins: <span id="currentCoins">0</span></div>
+
+        <aside id="shop" class="panel">
+            <h2>Run Shop</h2>
+            <p>Zwischen den Wellen kaufen. Tooltips stehen auf den Buttons.</p>
+            <div id="shopRows"></div>
+        </aside>
+
+        <aside id="metaProgress" class="panel">
+            <h3>Meta Progression</h3>
+            <p>Meta Credits: <strong id="metaCredits">0</strong></p>
+            <div id="metaRows"></div>
+        </aside>
+
+        <div id="startScreen" class="overlay panel">
+            <h1>Stranded Horizons</h1>
+            <p>Rogue-lite Survival Shooter</p>
+            <ul class="controls-help">
+                <li>WASD / Arrow Keys = Move</li>
+                <li>Mouse Click oder Space = Shoot</li>
+                <li>Shift = Dash (kostet Stamina)</li>
+                <li>Q = Weapon Switch, R = Reload</li>
+                <li>ESC = Pause-Menü</li>
+            </ul>
+            <button class="menu-btn" id="startButton">Start Run</button>
         </div>
-        <div id="deathScreen">
+
+        <div id="pauseMenu" class="overlay panel">
+            <h1>Pausiert</h1>
+            <button class="menu-btn" id="pauseResume">Resume</button>
+            <button class="menu-btn" id="pauseRestart">Restart</button>
+            <button class="menu-btn" id="pauseMenuBtn">Menu</button>
+        </div>
+
+        <div id="deathScreen" class="overlay panel">
             <h1>Game Over</h1>
-            <p>Final Score: <span id="finalScore">0</span></p>
-            <button onclick="game.restart()">Play Again</button>
-            <button onclick="window.location.href='index.html'">Back to Menu</button>
+            <p>Score: <span id="finalScore">0</span></p>
+            <p>Wave: <span id="finalWave">0</span></p>
+            <p>Kills: <span id="finalKills">0</span></p>
+            <p>Meta Credits earned: <span id="finalMeta">0</span></p>
+            <button class="menu-btn" id="restartButton">Play Again</button>
+            <button class="menu-btn" id="menuButton">Back to Menu</button>
         </div>
-        <div id="waveComplete">
-            Wave Complete! 
+
+        <div id="waveComplete" class="overlay panel">
+            Wave Complete!
             <br>Bonus: <span id="waveBonus">0</span> coins
+            <br>Next wave starts soon...
         </div>
     </div>
     <script src="game.js"></script>
