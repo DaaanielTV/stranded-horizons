@@ -651,6 +651,10 @@ class Game {
     }
 
     updateWave(now) {
+        if (this.wave.status === 'prep' && now >= this.wave.prepEndAt) {
+            this.beginWave(this.runStats.wave, now);
+        }
+
         if (this.wave.status === 'active' && now >= this.wave.nextSpawnAt && this.wave.spawned < this.wave.targetKills) {
             this.spawnEnemyForWave();
             const adjustedInterval = Math.max(
