@@ -177,7 +177,8 @@ class Game {
         this.setupInputHandlers();
         this.createShopUI();
         this.createMetaUI();
-        this.loadAssets();
+        this.assetsReady = false;
+        this.loadingAssets = false;
         this.resize();
         this.resetRun(true);
         requestAnimationFrame((ts) => this.gameLoop(ts));
@@ -218,6 +219,9 @@ class Game {
     }
 
     loadAssets() {
+        if (this.assetsReady) return Promise.resolve();
+        if (this.loadingAssets) return this.loadingAssets;
+
         const imageMap = {
             background: 'assets/game-background.png',
             player: 'assets/player-avatar.png',
@@ -228,22 +232,34 @@ class Game {
             exploder: 'assets/enemy-exploder.png'
         };
 
-        let loaded = 0;
-        const total = Object.keys(imageMap).length;
-        Object.entries(imageMap).forEach(([key, src]) => {
-            const img = new Image();
-            img.src = src;
-            img.onload = () => {
-                this.images[key] = img;
+        this.loadingAssets = new Promise((resolve) => {
+            let loaded = 0;
+            const total = Object.keys(imageMap).length;
+
+            const onAssetDone = () => {
                 loaded += 1;
                 if (loaded === total) {
+                    this.assetsReady = true;
+                    this.loadingAssets = null;
                     this.dom.waveStatus.textContent = 'Assets loaded. Press Start Run.';
+                    resolve();
                 }
             };
-            img.onerror = () => {
-                loaded += 1;
-            };
+
+            Object.entries(imageMap).forEach(([key, src]) => {
+                const img = new Image();
+                img.decoding = 'async';
+                img.loading = 'eager';
+                img.src = src;
+                img.onload = () => {
+                    this.images[key] = img;
+                    onAssetDone();
+                };
+                img.onerror = () => onAssetDone();
+            });
         });
+
+        return this.loadingAssets;
     }
 
     setupInputHandlers() {
@@ -275,7 +291,14 @@ class Game {
         });
         this.canvas.addEventListener('mousedown', (e) => this.handleShootInput(e));
 
-        this.dom.startButton.addEventListener('click', () => this.startRun());
+        this.dom.startButton.addEventListener('click', async () => {
+            if (this.assetsReady || this.loadingAssets) return;
+            this.dom.waveStatus.textContent = 'Loading assets...';
+            this.dom.startButton.disabled = true;
+            await this.loadAssets();
+            this.dom.startButton.disabled = false;
+            this.startRun();
+        });
         this.dom.restartButton.addEventListener('click', () => this.restart());
         this.dom.menuButton.addEventListener('click', () => this.backToMenu());
         this.dom.pauseResume.addEventListener('click', () => this.togglePause());
