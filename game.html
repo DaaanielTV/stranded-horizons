@@ -89,6 +89,74 @@
         .controls-help li { margin-left: 18px; }
 
         #waveComplete { color: #63e6be; font-size: 26px; }
+
+        .touch-controls {
+            display: none;
+            position: absolute;
+            inset: 0;
+            z-index: 14;
+            pointer-events: none;
+        }
+
+        .touch-controls.active { display: block; }
+        .touch-controls button, .touch-controls .stick-zone { pointer-events: auto; }
+
+        .stick-zone {
+            position: absolute;
+            left: 14px;
+            bottom: 14px;
+            width: 130px;
+            height: 130px;
+            border-radius: 50%;
+            border: 1px solid rgba(255,255,255,.2);
+            background: rgba(8, 10, 20, 0.4);
+            backdrop-filter: blur(4px);
+            touch-action: none;
+        }
+
+        .stick-knob {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 54px;
+            height: 54px;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(162, 155, 254, 0.45);
+            border: 1px solid rgba(255,255,255,.28);
+        }
+
+        .touch-actions {
+            position: absolute;
+            right: 12px;
+            bottom: 12px;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(64px, 1fr));
+            gap: 8px;
+            width: min(170px, 42vw);
+        }
+
+        .touch-btn {
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,.18);
+            color: #fff;
+            font-weight: 700;
+            background: rgba(108, 92, 231, 0.28);
+            padding: 12px 8px;
+        }
+
+        @media (max-width: 900px) {
+            .hud { min-width: 0; width: calc(100vw - 32px); font-size: 13px; }
+            #shop, #metaProgress {
+                width: calc(100vw - 32px);
+                max-width: 100vw;
+                left: 16px;
+                right: 16px;
+            }
+            #shop { top: 128px; max-height: 36vh; }
+            #metaProgress { bottom: 16px; max-height: 28vh; overflow-y: auto; }
+            .overlay { min-width: min(360px, calc(100vw - 24px)); max-width: calc(100vw - 24px); }
+        }
     </style>
 </head>
 <body>
@@ -157,6 +225,18 @@
             Wave Complete!
             <br>Bonus: <span id="waveBonus">0</span> coins
             <br>Next wave starts soon...
+        </div>
+
+        <div id="touchControls" class="touch-controls" aria-hidden="true">
+            <div id="stickZone" class="stick-zone">
+                <div id="stickKnob" class="stick-knob"></div>
+            </div>
+            <div class="touch-actions">
+                <button id="touchShoot" class="touch-btn">Shoot</button>
+                <button id="touchDash" class="touch-btn">Dash</button>
+                <button id="touchReload" class="touch-btn">Reload</button>
+                <button id="touchSwitch" class="touch-btn">Swap</button>
+            </div>
         </div>
     </div>
     <script src="game.js" defer></script>
