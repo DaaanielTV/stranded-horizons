@@ -150,6 +150,9 @@ class Game {
         this.audioCtx = null;
         this.keys = {};
         this.mouse = { x: 0, y: 0 };
+        this.touchMove = { x: 0, y: 0, active: false };
+        this.touchPointerId = null;
+        this.isTouchDevice = this.detectTouchDevice();
         this.gameState = 'init';
         this.lastTimestamp = performance.now();
 
@@ -214,8 +217,19 @@ class Game {
             shopRows: document.getElementById('shopRows'),
             activeBuffs: document.getElementById('activeBuffs'),
             metaCredits: document.getElementById('metaCredits'),
-            metaRows: document.getElementById('metaRows')
+            metaRows: document.getElementById('metaRows'),
+            touchControls: document.getElementById('touchControls'),
+            stickZone: document.getElementById('stickZone'),
+            stickKnob: document.getElementById('stickKnob'),
+            touchShoot: document.getElementById('touchShoot'),
+            touchDash: document.getElementById('touchDash'),
+            touchReload: document.getElementById('touchReload'),
+            touchSwitch: document.getElementById('touchSwitch')
         };
+    }
+
+    detectTouchDevice() {
+        return window.matchMedia('(pointer: coarse)').matches || navigator.maxTouchPoints > 0;
     }
 
     loadAssets() {
@@ -290,6 +304,7 @@ class Game {
             this.mouse.y = e.clientY - rect.top;
         });
         this.canvas.addEventListener('mousedown', (e) => this.handleShootInput(e));
+        this.canvas.addEventListener('touchstart', (e) => this.handleShootInput(e), { passive: false });
 
         this.dom.startButton.addEventListener('click', async () => {
             if (this.assetsReady || this.loadingAssets) return;
@@ -304,6 +319,10 @@ class Game {
         this.dom.pauseResume.addEventListener('click', () => this.togglePause());
         this.dom.pauseRestart.addEventListener('click', () => this.restart());
         this.dom.pauseMenuBtn.addEventListener('click', () => this.backToMenu());
+
+        if (this.isTouchDevice) {
+            this.setupTouchControls();
+        }
     }
 
     resize() {
@@ -543,8 +562,14 @@ class Game {
     handleShootInput(e) {
         if (this.gameState !== 'playing') return;
         const rect = this.canvas.getBoundingClientRect();
-        this.mouse.x = e.clientX - rect.left;
-        this.mouse.y = e.clientY - rect.top;
+        if (e.touches && e.touches[0]) {
+            this.mouse.x = e.touches[0].clientX - rect.left;
+            this.mouse.y = e.touches[0].clientY - rect.top;
+            e.preventDefault();
+        } else {
+            this.mouse.x = e.clientX - rect.left;
+            this.mouse.y = e.clientY - rect.top;
+        }
         this.tryShoot();
     }
 
@@ -635,6 +660,10 @@ class Game {
         if (this.keys['s'] || this.keys['arrowdown']) moveY += 1;
         if (this.keys['a'] || this.keys['arrowleft']) moveX -= 1;
         if (this.keys['d'] || this.keys['arrowright']) moveX += 1;
+        if (this.touchMove.active) {
+            moveX += this.touchMove.x;
+            moveY += this.touchMove.y;
+        }
 
         const length = Math.hypot(moveX, moveY) || 1;
         const normalizedX = moveX / length;
@@ -648,6 +677,57 @@ class Game {
         this.player.y = this.clamp(this.player.y, this.player.height / 2, this.canvas.height - this.player.height / 2);
 
         this.player.stamina = Math.min(GAME_CONFIG.player.maxStamina, this.player.stamina + GAME_CONFIG.player.staminaRegen * delta);
+    }
+
+    setupTouchControls() {
+        this.dom.touchControls.classList.add('active');
+        this.dom.touchControls.setAttribute('aria-hidden', 'false');
+        const zone = this.dom.stickZone;
+        const knob = this.dom.stickKnob;
+        const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+
+        const updateStick = (clientX, clientY) => {
+            const rect = zone.getBoundingClientRect();
+            const cx = rect.left + rect.width / 2;
+            const cy = rect.top + rect.height / 2;
+            const dx = clientX - cx;
+            const dy = clientY - cy;
+            const max = rect.width * 0.35;
+            const len = Math.hypot(dx, dy) || 1;
+            const limitedX = clamp(dx, -max, max);
+            const limitedY = clamp(dy, -max, max);
+            knob.style.transform = `translate(calc(-50% + ${limitedX}px), calc(-50% + ${limitedY}px))`;
+            this.touchMove.x = (dx / len) * Math.min(1, Math.abs(dx) / max);
+            this.touchMove.y = (dy / len) * Math.min(1, Math.abs(dy) / max);
+            this.touchMove.active = true;
+        };
+
+        zone.addEventListener('pointerdown', (e) => {
+            this.touchPointerId = e.pointerId;
+            zone.setPointerCapture(e.pointerId);
+            updateStick(e.clientX, e.clientY);
+        });
+        zone.addEventListener('pointermove', (e) => {
+            if (this.touchPointerId !== e.pointerId) return;
+            updateStick(e.clientX, e.clientY);
+        });
+        const resetStick = () => {
+            this.touchMove = { x: 0, y: 0, active: false };
+            knob.style.transform = 'translate(-50%, -50%)';
+        };
+        zone.addEventListener('pointerup', resetStick);
+        zone.addEventListener('pointercancel', resetStick);
+
+        this.dom.touchShoot.addEventListener('pointerdown', (e) => {
+            const rect = this.canvas.getBoundingClientRect();
+            this.mouse.x = rect.width * 0.8;
+            this.mouse.y = rect.height * 0.5;
+            this.tryShoot();
+            e.preventDefault();
+        });
+        this.dom.touchDash.addEventListener('pointerdown', () => this.tryDash());
+        this.dom.touchReload.addEventListener('pointerdown', () => this.startReload());
+        this.dom.touchSwitch.addEventListener('pointerdown', () => this.switchWeapon());
     }
 
     updateWave(now) {
