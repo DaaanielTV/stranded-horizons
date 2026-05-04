@@ -1,3 +1,8 @@
+## Warranty & Liability
+This software is provided "as is", without warranty of any kind. See the LICENSE file for the full GPL-3.0 disclaimer of warranty and limitation of liability.
+
+I'm not responsible if this breaks your setup. Test it before using it in production.
+
 # Stranded Horizons
 
 Stranded Horizons is a lightweight browser game built with vanilla HTML, CSS, and JavaScript. You control a survivor, fend off enemy waves, earn coins, and buy upgrades to stay alive longer.
