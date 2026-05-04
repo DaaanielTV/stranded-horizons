@@ -330,18 +330,57 @@ class Game {
         this.canvas.height = window.innerHeight;
     }
 
-    loadMetaProgress() {
+    toSafeInt(value, min, max, fallback = min) {
+        if (typeof value !== 'number' || !Number.isFinite(value)) return fallback;
+        const normalized = Math.trunc(value);
+        if (normalized < min || normalized > max) return fallback;
+        return normalized;
+    }
+
+    toSafeDateString(value) {
+        if (typeof value !== 'string') return null;
+        const timestamp = Date.parse(value);
+        if (Number.isNaN(timestamp)) return null;
+        return new Date(timestamp).toISOString();
+    }
+
+    sanitizeMeta(rawMeta) {
         const fallback = { credits: 0, survivor: 0, prospector: 0, arsenal: 0, veteran: 0 };
+        if (!rawMeta || typeof rawMeta !== 'object' || Array.isArray(rawMeta)) return fallback;
+
+        return {
+            credits: this.toSafeInt(rawMeta.credits, 0, 1_000_000, fallback.credits),
+            survivor: this.toSafeInt(rawMeta.survivor, 0, 8, fallback.survivor),
+            prospector: this.toSafeInt(rawMeta.prospector, 0, 6, fallback.prospector),
+            arsenal: this.toSafeInt(rawMeta.arsenal, 0, 1, fallback.arsenal),
+            veteran: this.toSafeInt(rawMeta.veteran, 0, 7, fallback.veteran)
+        };
+    }
+
+    sanitizeBestRun(rawRun) {
+        if (!rawRun || typeof rawRun !== 'object' || Array.isArray(rawRun)) return null;
+
+        const score = this.toSafeInt(rawRun.score, 0, 10_000_000, 0);
+        const wave = this.toSafeInt(rawRun.wave, 1, 100_000, 1);
+        const kills = this.toSafeInt(rawRun.kills, 0, 10_000_000, 0);
+        const runPower = this.toSafeInt(rawRun.runPower, 0, 50_000_000, 0);
+        const date = this.toSafeDateString(rawRun.date);
+
+        return { score, wave, kills, runPower, date };
+    }
+
+    loadMetaProgress() {
         const raw = localStorage.getItem(STORAGE_KEYS.META);
-        if (!raw) return fallback;
+        if (!raw) return this.sanitizeMeta(null);
         try {
-            return { ...fallback, ...JSON.parse(raw) };
+            return this.sanitizeMeta(JSON.parse(raw));
         } catch {
-            return fallback;
+            return this.sanitizeMeta(null);
         }
     }
 
     saveMeta() {
+        this.meta = this.sanitizeMeta(this.meta);
         localStorage.setItem(STORAGE_KEYS.META, JSON.stringify(this.meta));
     }
 
@@ -349,15 +388,17 @@ class Game {
         const raw = localStorage.getItem(STORAGE_KEYS.HIGH_RUN);
         if (!raw) return null;
         try {
-            return JSON.parse(raw);
+            return this.sanitizeBestRun(JSON.parse(raw));
         } catch {
             return null;
         }
     }
 
     saveBestRun(run) {
-        localStorage.setItem(STORAGE_KEYS.HIGH_RUN, JSON.stringify(run));
-        this.bestRun = run;
+        const safeRun = this.sanitizeBestRun(run);
+        if (!safeRun) return;
+        localStorage.setItem(STORAGE_KEYS.HIGH_RUN, JSON.stringify(safeRun));
+        this.bestRun = safeRun;
     }
 
     createShopUI() {
