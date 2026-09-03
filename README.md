@@ -1,89 +1,81 @@
-## Warranty & Liability
-This software is provided "as is", without warranty of any kind. See the LICENSE file for the full GPL-3.0 disclaimer of warranty and limitation of liability.
-
-I'm not responsible if this breaks your setup. Test it before using it in production.
-
 # Stranded Horizons
 
-Stranded Horizons is a lightweight browser game built with vanilla HTML, CSS, and JavaScript. You control a survivor, fend off enemy waves, earn coins, and buy upgrades to stay alive longer.
+> Leichtgewichtiges Browser Survival Game – Vanilla HTML, CSS, JavaScript. Ohne Backend, ohne Build-Step.
 
-## Project Overview
+Entstanden am 08.04.2025 – first commit `3a668c7` mit 18 Dateien. Im ersten Draft hieß die Idee noch viel größer – `PROJECT-IDEA` mit Character Creation, Builder/Scout/Medic/Engineer, Stamina & Co. Am Ende wurde es ein fokussiertes Wave-Survival.
 
-This repository contains the complete source code for the game client and static assets. It is designed to run locally without a backend service or package manager.
+### Entstehung
 
-## Features / Purpose
+Ich wollte schon immer ein (Browser) Spiel bauen, vor allem RPG. Hatte nie die Zeit, jetzt noch weniger um kreativ zu sein. Das ist das einzige Projekt wo ich Auto-Deploys zu Vercel habe – Free Tier wird um Weltjahre nicht ausgelastet. Nur Hater die nie was probieren sagen da was, um nie etwas proven zu müssen xD.
 
-- Pure front-end implementation (no framework, no build step required)
-- HTML5 Canvas rendering and real-time game loop
-- Keyboard movement (WASD / arrow keys) and mouse aiming/shooting
-- Wave-based enemy spawning
-- In-game shop for speed and damage upgrades
-- Local high score persistence via `localStorage`
+Ursprünglich als Multiplayer Survival auf einer Insel geplant, jetzt als Singleplayer Wave-Shooter umgesetzt – ideal um Vanilla JS Game-Loop zu lernen.
 
-## Installation
+### Was ist das?
 
-### Option 1: Clone with Git
+Du steuerst einen Survivor, wehrst Wellen ab, sammelst Coins und kaufst Upgrades. HTML5 Canvas, Echtzeit Game-Loop.
 
+**Features:**
+- Pure Front-End – kein Framework, kein Build
+- Canvas Rendering + Game-Loop
+- WASD / Pfeiltasten + Maus Aim/Shoot
+- Wave Spawning
+- Shop für Speed & Damage Upgrades
+- Highscore in `localStorage`
+
+### Installation
+
+**Option 1: Git**
 ```bash
-git clone <your-fork-or-repo-url>
+git clone <repo-url>
 cd stranded-horizons
 ```
 
-### Option 2: Download Source
+**Option 2:** ZIP downloaden und entpacken.
 
-Download the repository as a ZIP and extract it.
+### Nutzung
 
-## Usage
+`index.html` im Browser öffnen, **Play Now** klicken.
 
-Open `index.html` in a modern browser, then click **Play Now** to start.
-
-## Development Setup
-
-No package install is required. For best local development experience, run a simple static server:
-
+Für Dev besser mit static Server:
 ```bash
 python3 -m http.server 8000
+# -> http://localhost:8000
 ```
 
-Then open `http://localhost:8000`.
+### Konfiguration
 
-## Configuration
+Alle Balancing Werte direkt in `game.js`:
+- `health`, `speed`, `damage`
+- Enemy Spawn Intervall
+- Upgrade Preise
 
-Current gameplay tuning values are set directly in `game.js`, including:
+Wenn du Assets verschiebst, Pfade in `game.js` + `index.html` anpassen.
 
-- player stats (`health`, `speed`, `damage`)
-- enemy spawn interval
-- upgrade prices
+### Repo Struktur
 
-If you change asset locations, update paths in both `game.js` and `index.html`.
+- `index.html` – Landing
+- `game.html` – Game Screen
+- `game.js` – Logik
+- `assets/` – Bilder
+- `devlog/` – Screenshots & Notizen
 
-## Build / Run Instructions
+### Zukunft – Loop Engineering Experiment
 
-This project does not use precompiled artifacts. The source files in this repository are the runnable game.
+Ich will hier bald mein KVM-Konzept anwenden – mein Ubuntu Cloud VPS als Hypervisor:
 
-- **Run:** open `index.html` (or use a static server)
-- **Build:** not required
-- **Regenerate assets:** add/edit source images under `assets/` and reference them from HTML/JS
+- **VM1 Worker** – 3 Git Worktrees + OpenCode/Puppeteer Agents (UI/Audio, Gameplay, Balancing)
+- **VM2 Production** – NGINX, hosted Game
+- **VM3 Management** – FastAPI Dashboard mit `STATUS.md` Feedback Loop, CI_SUCCESS/FAILURE Handling, Merge Konflikte
 
-## Troubleshooting
+Ziel: Ein 24/7 Loop der das Vanilla JS Spiel selbst weiterentwickelt – quasi Auto-Dev für ein Browser Game. Gespannt sein ^^
 
-- **Blank screen or no rendering:** ensure JavaScript is enabled and all asset paths resolve.
-- **Input not responding:** click the game canvas first so it receives focus.
-- **Assets fail to load:** verify file names in `assets/` exactly match references in `game.js`.
-- **Local file restrictions:** if your browser blocks local loading behavior, use a static server (`python3 -m http.server 8000`).
+### Troubleshooting
 
-## Repository Structure
+- **Schwarzer Screen**: JS aktiviert? Asset Pfade prüfen
+- **Kein Input**: Auf Canvas klicken für Fokus
+- **Assets laden nicht**: Dateinamen in `assets/` exakt wie in `game.js`
+- **Local File Block**: Statt Doppelklick `http.server` nutzen
 
-- `index.html` — landing page
-- `game.html` — game screen
-- `game.js` — game logic
-- `assets/` — image assets
-- `devlog/` — progress screenshots and notes
+### Lizenz
 
-## License
-
-This project is licensed under the GNU General Public License v3.0. See [LICENSE](LICENSE).
-
-## Contributing
-
-Please read [CONTRIBUTING.md](CONTRIBUTING.md) and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) before contributing.
+GNU GPLv3 – siehe [LICENSE](LICENSE).
